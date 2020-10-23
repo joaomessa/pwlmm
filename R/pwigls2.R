@@ -2,6 +2,7 @@
 #
 #   Uses: probability-weighted IGLS (PWIGLS)
 
+#' @export
 print.univariate <- function(m){
   cat(noquote("Call:\n"))
   print(m$call)
@@ -44,6 +45,7 @@ residuals.univariate <- function(m){
   m$individual_residuals
 }
 
+#' @export
 fitted.univariate <- function(m){
   m$fitted_values
 }
@@ -315,6 +317,7 @@ pwigls2 <-function(formula, data = NULL, wj, wij){
   list_igls
 }
 
+#' @export
 print.multivariate <- function(m){
   cat(noquote("Call:\n"))
   print(m$call)
@@ -338,10 +341,12 @@ print.multivariate <- function(m){
   cat(noquote("Note: robust standard errors"))
 }
 
+#' @export
 residuals.multivariate <- function(m){
   m$individual_residuals
 }
 
+#' @export
 fitted.multivariate <- function(m){
   m$fitted_values
 }
