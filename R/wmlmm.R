@@ -27,6 +27,7 @@
 #' @examples
 #'  wmlmm ( Y ~ X1 + X2, data = exampledata, idd, wave, wj, wi_j, "toep")
 #'
+#' @importFrom stats model.matrix model.response
 #' @return Estimated list of estimators
 #' @export
 wmlmm <- function(formula, data = NULL, ID3, ID2, ID1, wj, wij, type, rot = NULL){
