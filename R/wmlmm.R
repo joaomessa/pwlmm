@@ -94,7 +94,7 @@ wmlmm <- function(formula, data = NULL, ID3, ID2, ID1, wj, wij, type, rot = NULL
   h_matrix = diag(s)[1,]
 
   name1 <- matrix(paste (deparse(substitute(ID1)), 1:tt, sep=" "))
-  name1 <- rbind(name1, as.matrix(x_names))
+  name1 <- if (is.null(x_names)) name1 else rbind(name1, as.matrix(x_names))
   name3 = rbind(deparse(substitute(ID3)), name_type)
 
   nepg <- tapply(clusters, clusters, function(x) NROW(x))
