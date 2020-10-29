@@ -1,17 +1,20 @@
-#   Fit linear mixed-effects models incorporating sampling weights
+#  Fit linear mixed-effects models incorporating sampling weights
 #
-#   Uses: probability-weighted IGLS (PWIGLS)
+#  Uses: probability-weighted IGLS (PWIGLS)
+#' @useDynLib pwlmm
+#'
+.onUnload <- function (libpath) {library.dynam.unload("pwlmm", libpath)} #Why it works (using to avoid error message)
 
 #' @export
-print.univariate <- function(m){
+print.univariate <- function(x, ...){
   cat(noquote("Call:\n"))
-  print(m$call)
+  print(x$call)
   cat("\n")
-  cat(noquote("Number of observations:"), m$num_obs_1, "\n")
-  cat(noquote("Number of groups:"), m$num_obs_2, "\n")
+  cat(noquote("Number of observations:"), x$num_obs_1, "\n")
+  cat(noquote("Number of groups:"), x$num_obs_2, "\n")
   cat("\n")
   cat(noquote("Fixed effects:\n"))
-  result_beta=data.frame(estimate = m$beta$coefficients, std_error = m$beta$standard_errors, t_value = m$beta$coefficients/m$beta$standard_errors)
+  result_beta=data.frame(estimate = x$beta$coefficients, std_error = x$beta$standard_errors, t_value = x$beta$coefficients/x$beta$standard_errors)
   names(result_beta) <- c("Estimate", "Std. Error", "t value")
   print(result_beta, digits=4)
 
@@ -19,13 +22,13 @@ print.univariate <- function(m){
   cat(noquote("Random effects:\n"))
   cat("\n")
   cat(noquote("Variance components:\n"))
-  result_theta = data.frame(estimate = c(m$theta$level2_variances,m$theta$level1_variance) ,
-                            se = c(m$theta$se_level2_variances, m$theta$se_level1_variance))
+  result_theta = data.frame(estimate = c(x$theta$level2_variances,x$theta$level1_variance) ,
+                            se = c(x$theta$se_level2_variances, x$theta$se_level1_variance))
   names(result_theta) <- c("Estimate","Std. Error")
   print(result_theta, digits = 4)
 
-  if(!is.null(m$theta$level2_covariances)){
-    var_cov <- m$theta$var_cov
+  if(!is.null(x$theta$level2_covariances)){
+    var_cov <- x$theta$var_cov
     ujs=nrow(var_cov)
     var_cov <- as.data.frame(format(var_cov, digits=4))
     var_cov <- as.matrix(var_cov)
@@ -41,13 +44,14 @@ print.univariate <- function(m){
   cat(noquote("Note: robust standard errors"))
 }
 
-residuals.univariate <- function(m){
-  m$individual_residuals
+#' @export
+residuals.univariate <- function(object, ...){
+  object$individual_residuals
 }
 
 #' @export
-fitted.univariate <- function(m){
-  m$fitted_values
+fitted.univariate <- function(object, ...){
+  object$fitted_values
 }
 
 #' Fit Weighted Linear Multilevel Model
@@ -70,6 +74,7 @@ fitted.univariate <- function(m){
 #' @examples
 #' pwigls2( Y ~ X1 + X2 + (1|PSU), data = exampledata, wj, wij)
 #'
+#' @importFrom stats model.matrix model.response
 #' @return Estimated list of estimators
 #' @export
 pwigls2 <-function(formula, data = NULL, wj, wij){
@@ -318,22 +323,22 @@ pwigls2 <-function(formula, data = NULL, wj, wij){
 }
 
 #' @export
-print.multivariate <- function(m){
+print.multivariate <- function(x, ...){
   cat(noquote("Call:\n"))
-  print(m$call)
+  print(x$call)
   cat("\n")
-  cat(noquote("Number of observations:"), m$num_obs_1, "\n")
-  cat(noquote("Number of groups:"), m$num_obs_2, "\n")
-  cat(noquote("Number of repeated measures:"), m$num_time_obs, "\n")
+  cat(noquote("Number of observations:"), x$num_obs_1, "\n")
+  cat(noquote("Number of groups:"), x$num_obs_2, "\n")
+  cat(noquote("Number of repeated measures:"), x$num_time_obs, "\n")
   cat("\n")
   cat(noquote("Fixed effects:\n"))
-  result_beta=data.frame(estimate = m$beta$coefficients, std_error = m$beta$standard_errors, t_value = m$beta$coefficients/m$beta$standard_errors)
+  result_beta=data.frame(estimate = x$beta$coefficients, std_error = x$beta$standard_errors, t_value = x$beta$coefficients/x$beta$standard_errors)
   names(result_beta) <- c("Estimate", "Std. Error", "t value")
   print(result_beta, digits = 4)
 
   cat("\n")
   cat(noquote("Random effects:\n"))
-  result_theta=data.frame(estimate = m$theta$coefficients, std_error = m$theta$standard_errors)
+  result_theta=data.frame(estimate = x$theta$coefficients, std_error = x$theta$standard_errors)
   names(result_theta) <- c("Estimate", "Std. Error")
   print(result_theta, digits = 4)
 
@@ -342,15 +347,16 @@ print.multivariate <- function(m){
 }
 
 #' @export
-residuals.multivariate <- function(m){
-  m$individual_residuals
+residuals.multivariate <- function(object, ...){
+  object$individual_residuals
 }
 
 #' @export
-fitted.multivariate <- function(m){
-  m$fitted_values
+fitted.multivariate <- function(object, ...){
+  object$fitted_values
 }
 
+#' @importFrom stats toeplitz
 teta_structure_toep <- function(teta, s){
     return(toeplitz(as.numeric(teta[2:s])))
 }
@@ -400,7 +406,7 @@ delta_gen <- function(rot, s){
               name_type = matrix(paste("Genlin ", 1:(length(DELTA)-1), sep=""))))
 }
 
-#There's a more effective way which doesn't use 'for'
+#There's a more effective way which doesn't make use of 'for'
 delta_toep <- function(tt){
   k=0
 lag_size=tt-1
